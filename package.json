@@ -10,8 +10,11 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "lodash": "^4.17.15",
     "react": "16.9.0",
-    "react-native": "0.61.2"
+    "react-native": "0.61.2",
+    "react-native-webrtc": "^1.75.0",
+    "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.6.4",
