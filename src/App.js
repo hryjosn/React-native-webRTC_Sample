@@ -13,7 +13,7 @@ import io from 'socket.io-client';
 import { button, container, rtcView, text } from './styles';
 import { values } from 'lodash';
 
-const url = 'https://tico-webrtc-signal-server.herokuapp.com'
+const url = 'https://tico-webrtc-signal-server.herokuapp.com';
 const { width, height } = Dimensions.get('window');
 
 YellowBox.ignoreWarnings(['Setting a timer', 'Unrecognized WebSocket connection', 'ListView is deprecated and will be removed']);
@@ -21,7 +21,19 @@ YellowBox.ignoreWarnings(['Setting a timer', 'Unrecognized WebSocket connection'
 /* ==============================
  Global variables
  ================================ */
-const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+const configuration = {
+  iceServers: [
+    {
+      url: 'turn:numb.viagenie.ca',
+      username: 'jo74705@gmail.com',
+      credential: 'j24311212',
+    }
+    , {
+      'urls': 'stun:stun.l.google.com:19302',
+    }, {
+      'urls': 'stun:stun.xten.com',
+    }],
+};
 
 let localStream;
 
