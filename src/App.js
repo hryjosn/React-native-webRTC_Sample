@@ -1,5 +1,11 @@
-import React, { Component } from 'react';
-import { Text, TouchableOpacity, View, YellowBox, Dimensions } from 'react-native';
+import React, {Component} from 'react';
+import {
+  Text,
+  TouchableOpacity,
+  View,
+  YellowBox,
+  Dimensions,
+} from 'react-native';
 import {
   RTCPeerConnection,
   RTCIceCandidate,
@@ -10,13 +16,11 @@ import {
   mediaDevices,
 } from 'react-native-webrtc';
 import io from 'socket.io-client';
-import { button, container, rtcView, text } from './styles';
-import { values } from 'lodash';
+import {button, container, rtcView, text} from './styles';
+import {values} from 'lodash';
 
-const url = 'https://tico-webrtc-signal-server.herokuapp.com';
-const { width, height } = Dimensions.get('window');
-
-YellowBox.ignoreWarnings(['Setting a timer', 'Unrecognized WebSocket connection', 'ListView is deprecated and will be removed']);
+const url = 'localhost:8080';
+const {width, height} = Dimensions.get('window');
 
 /* ==============================
  Global variables
@@ -24,15 +28,12 @@ YellowBox.ignoreWarnings(['Setting a timer', 'Unrecognized WebSocket connection'
 const configuration = {
   iceServers: [
     {
-      url: 'turn:numb.viagenie.ca',
-      username: 'jo74705@gmail.com',
-      credential: 'j24311212',
-    }
-    , {
-      'urls': 'stun:stun.l.google.com:19302',
-    }, {
-      'urls': 'stun:stun.xten.com',
-    }],
+      urls: 'stun:stun.l.google.com:19302',
+    },
+    {
+      urls: 'stun:stun.xten.com',
+    },
+  ],
 };
 
 let localStream;
@@ -44,12 +45,12 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.pcPeers = {};
-    this.socket = io.connect(url, { transports: ['websocket'] });
+    this.socket = io.connect(url, {transports: ['websocket']});
     this.state = {
       localStream: '',
       remoteList: [],
-      remoteCamera: 1,//on:1 ,off :0
-      localCamera: 1,  //on:1 ,off :0
+      remoteCamera: 1, //on:1 ,off :0
+      localCamera: 1, //on:1 ,off :0
       stateMicrophone: true,
     };
   }
@@ -63,34 +64,33 @@ class App extends Component {
       this.exchange(data);
     });
     this.socket.on('turnOffCamera', param => {
-      this.setState({ remoteCamera: param });
+      this.setState({remoteCamera: param});
     });
   }
 
   getLocalStream = () => {
-
-
     mediaDevices.enumerateDevices().then(sourceInfos => {
       let videoSourceId;
       for (let i = 0; i < sourceInfos.length; i++) {
         const sourceInfo = sourceInfos[i];
-        if (sourceInfo.kind === 'videoinput' && sourceInfo.facing === ('front')) {
+        if (sourceInfo.kind === 'videoinput' && sourceInfo.facing === 'front') {
           videoSourceId = sourceInfo.deviceId;
         }
       }
-      mediaDevices.getUserMedia({
-        //this function also request camera and audio permissions
-        audio: true,
-        video: {
-          mandatory: {
-            minWidth: 640,
-            minHeight: 360,
-            minFrameRate: 30,
+      mediaDevices
+        .getUserMedia({
+          //this function also request camera and audio permissions
+          audio: true,
+          video: {
+            mandatory: {
+              minWidth: 640,
+              minHeight: 360,
+              minFrameRate: 30,
+            },
+            facingMode: 'user',
+            optional: videoSourceId ? [{sourceId: videoSourceId}] : [],
           },
-          facingMode: ('user'),
-          optional: (videoSourceId ? [{ sourceId: videoSourceId }] : []),
-        },
-      })
+        })
         .then(async stream => {
           this.join('abc');
           this.localStream = stream;
@@ -103,7 +103,6 @@ class App extends Component {
           console.log('error>>>', error);
         });
     });
-
   };
   switchCamera = () => {
     localStream.getVideoTracks().forEach(track => {
@@ -121,19 +120,27 @@ class App extends Component {
 
     if (data.sdp) {
       let sdp = new RTCSessionDescription(data.sdp);
-      pc.setRemoteDescription(sdp).then(
-        () => pc.remoteDescription.type === 'offer' ?
-          pc.createAnswer().then(
-            desc => pc.setLocalDescription(desc).then(
-              () => this.socket.emit('exchange', { to: fromId, sdp: pc.localDescription }),
-            )) :
-          null);
+      pc.setRemoteDescription(sdp).then(() =>
+        pc.remoteDescription.type === 'offer'
+          ? pc
+              .createAnswer()
+              .then(desc =>
+                pc
+                  .setLocalDescription(desc)
+                  .then(() =>
+                    this.socket.emit('exchange', {
+                      to: fromId,
+                      sdp: pc.localDescription,
+                    }),
+                  ),
+              )
+          : null,
+      );
     } else {
       pc.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
   };
   onPress = () => {
-
     this.join('abc');
   };
   //hang off the phone
@@ -160,7 +167,6 @@ class App extends Component {
     this.setState({
       remoteList: {},
     });
-
   };
   createPC = (socketId, isOffer) => {
     const peer = new RTCPeerConnection(configuration);
@@ -172,7 +178,10 @@ class App extends Component {
 
     peer.onicecandidate = event => {
       if (event.candidate) {
-        this.socket.emit('exchange', { to: socketId, candidate: event.candidate });
+        this.socket.emit('exchange', {
+          to: socketId,
+          candidate: event.candidate,
+        });
       }
     };
 
@@ -193,8 +202,6 @@ class App extends Component {
             track._switchCamera();
           });
         }
-
-
       }
     };
 
@@ -202,13 +209,16 @@ class App extends Component {
       const remoteList = this.state.remoteList;
       remoteList[socketId] = event.stream;
 
-      this.setState({ remoteList });
+      this.setState({remoteList});
     };
 
     const createOffer = () => {
       peer.createOffer().then(desc => {
         peer.setLocalDescription(desc).then(() => {
-          this.socket.emit('exchange', { to: socketId, sdp: peer.localDescription });
+          this.socket.emit('exchange', {
+            to: socketId,
+            sdp: peer.localDescription,
+          });
         });
       });
     };
@@ -217,7 +227,7 @@ class App extends Component {
   };
 
   render() {
-    const { streamURL } = this.state;
+    const {streamURL} = this.state;
     const remoteList = values(this.state.remoteList);
 
     return (
@@ -226,21 +236,19 @@ class App extends Component {
         {this.button(this.hangOff, 'hang off')}
         {this.button(this.switchCamera, 'Change Camera')}
 
-        <RTCView streamURL={streamURL} style={rtcView.style}/>
+        <RTCView streamURL={streamURL} style={rtcView.style} />
 
-        {
-          remoteList.length > 0 &&
+        {remoteList.length > 0 && (
           <RTCView
             style={rtcView.style}
             objectFit={'cover'}
             key={`Remote_RTCView`}
             streamURL={remoteList[remoteList.length - 1].toURL()}
           />
-        }
+        )}
       </View>
     );
   }
 }
-
 
 export default App;

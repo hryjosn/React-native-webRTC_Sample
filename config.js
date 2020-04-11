@@ -1,5 +1,5 @@
 const config = () => ({
-  signalSeverUrl: 'https://tico-webrtc-signal-server.herokuapp.com'
+  signalSeverUrl: 'localhost:8080'
 });
 
 export default config();
